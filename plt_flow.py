@@ -4,6 +4,27 @@ import sys
 import numpy as np
 import argparse
 
+def calculate_rmse_errors(error_data):
+    # 计算均方根误差（RMSE）
+    rmse = np.sqrt(np.mean(error_data ** 2))
+    return rmse
+
+def calculate_pixel_errors(error_x, error_y, threshold):
+    # 计算位移向量的欧几里得距离
+    displacement = np.sqrt(error_x ** 2 + error_y ** 2)
+
+    # 计算1像素误差的数量
+    pixel_error_count = np.sum(displacement > threshold)
+
+    # 计算总像素数量
+    total_pixels = np.prod(displacement.shape)
+
+    # 计算像素误差的百分比
+    pixel_error_percentage = (pixel_error_count / total_pixels) * 100
+    return pixel_error_percentage
+
+
+
 def parse_gt_data(gt_file_path, data_gt):
     data_gt["ID"] = []
     data_gt["VX"] = []
@@ -52,6 +73,8 @@ parser.add_argument('-f', '--fft', type=str, help='fft flow result path')
 parser.add_argument('-k', '--klt', type=str, help='klt flow result path')
 parser.add_argument('-d', '--deep_sea', type=str, help='deep_sea flow result path')
 parser.add_argument('-g', '--gt', type=str, help='gt flow result path')
+parser.add_argument('-e', '--eval', type=str, help='eval result path')
+parser.add_argument('-s', '--start', type=int, help='start count')
 
 # 解析命令行参数
 args = parser.parse_args()
@@ -59,6 +82,7 @@ args = parser.parse_args()
 data_num = 0
 gt_num = 0
 data_dict = {}
+gt_data = {}
 # 数据读取
 if args.fft:
     print('fft flow result path:', args.fft)
@@ -77,14 +101,18 @@ if args.deep_sea:
     data_num += 1
 if args.gt:
     print('gt flow result path:', args.gt)
-    data_dict['gt'] = {}
-    parse_gt_data(args.gt, data_dict['gt'])
+    parse_gt_data(args.gt, gt_data)
     gt_num = 1
+
+start_count = 0
+if args.start:
+    print('start count:', args.start)
+    start_count = args.start
 
 #数据格式转换
 for data_key in data_dict:
-    data_dict[data_key] = {key: np.array(value) for key, value in data_dict[data_key].items()}
-
+    data_dict[data_key] = {key: np.array(value[start_count:]) for key, value in data_dict[data_key].items()}
+gt_data = {key: np.array(value[start_count:]) for key, value in gt_data.items()}
 
 fx_dt = 138.323/30
 fy_dt = 184.426/30
@@ -92,37 +120,26 @@ offset = 2
 
 # Plot the curves
 if gt_num > 0:
-    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(10, 6), sharex=True, sharey=True)
+    fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(20, 12), sharex=True)
 else:
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 6), sharex=True, sharey=True)
 
 for key in data_dict:
-    if key == "fft":
-        ax1.plot(data_dict[key]["ID"], data_dict[key]["VX"]/fx_dt, label="fft_vx")
-        ax2.plot(data_dict[key]["ID"], data_dict[key]["VY"]/fy_dt, label="fft_vy")
-    elif key == "klt":
-        print(data_dict[key]["VX"])
-        ax1.plot(data_dict[key]["ID"], data_dict[key]["VX"]/fx_dt, label="klt_vx")
-        ax2.plot(data_dict[key]["ID"], -data_dict[key]["VY"]/fy_dt, label="klt_vy")
-    elif key == "deep_sea":
-        ax1.plot(data_dict[key]["ID"], -data_dict[key]["VX"]/fx_dt, label="deep_sea_vx")
-        ax2.plot(data_dict[key]["ID"], data_dict[key]["VY"]/fy_dt, label="deep_sea_vy")
+    ax1.plot(data_dict[key]["ID"], data_dict[key]["VX"]/fx_dt, label="{}_vx".format(key))
+    ax2.plot(data_dict[key]["ID"], data_dict[key]["VY"]/fy_dt, label="{}_vy".format(key))
 
+error_dict = {}
 if gt_num > 0:
-    ax1.plot(data_dict["gt"]["ID"]-offset, -data_dict["gt"]["VY"], label="gt_vx") # -gt_y = fft_x
-    ax2.plot(data_dict["gt"]["ID"]-offset, -data_dict["gt"]["VX"], label="gt_vy") # -gt_x = fft_y
+    ax1.plot(gt_data["ID"]-offset, -gt_data["VY"], label="gt_vx") # -gt_y = fft_x
+    ax2.plot(gt_data["ID"]-offset, -gt_data["VX"], label="gt_vy") # -gt_x = fft_y
     for key in data_dict:
-        if key == "fft":
-            ax3.plot(data_dict["gt"]["ID"][:len(data_dict["gt"]["ID"])-offset], abs(-data_dict["gt"]["VY"][offset:] - (data_dict[key]["VX"][:len(data_dict["gt"]["ID"])-offset]/fx_dt)), label="error_fft_vx")
-            ax4.plot(data_dict["gt"]["ID"][:len(data_dict["gt"]["ID"])-offset], abs(-data_dict["gt"]["VX"][offset:] - (data_dict[key]["VY"][:len(data_dict["gt"]["ID"])-offset]/fy_dt)), label="error_fft_vy")
-        elif key == "klt":
-            ax3.plot(data_dict["gt"]["ID"][:len(data_dict["gt"]["ID"])-offset], abs(-data_dict["gt"]["VY"][offset:] - (data_dict[key]["VX"][:len(data_dict["gt"]["ID"])-offset]/fx_dt)), label="error_klt_vx")
-            ax4.plot(data_dict["gt"]["ID"][:len(data_dict["gt"]["ID"])-offset], abs(-data_dict["gt"]["VX"][offset:] + (data_dict[key]["VY"][:len(data_dict["gt"]["ID"])-offset]/fy_dt)), label="error_klt_vy")
-        elif key == "deep_sea":
-            ax3.plot(data_dict["gt"]["ID"][:len(data_dict["gt"]["ID"])-offset], abs(-data_dict["gt"]["VY"][offset:] + (data_dict[key]["VX"][:len(data_dict["gt"]["ID"])-offset]/fx_dt)), label="error_deep_sea_vx")
-            ax4.plot(data_dict["gt"]["ID"][:len(data_dict["gt"]["ID"])-offset], abs(-data_dict["gt"]["VX"][offset:] - (data_dict[key]["VY"][:len(data_dict["gt"]["ID"])-offset]/fy_dt)), label="error_deep_sea_vy")
-    ax3.plot(data_dict["gt"]["ID"], data_dict["gt"]["HG"], label="gt_h") # -gt_y = fft_x
-    ax4.plot(data_dict["gt"]["ID"], data_dict["gt"]["HG"], label="gt_h") # -gt_y = fft_x
+        error_dict[key] = {}
+        error_dict[key]["error_vx"] = -gt_data["VY"][offset:] - (data_dict[key]["VX"][:len(gt_data["ID"])-offset]/fx_dt)
+        error_dict[key]["error_vy"] = -gt_data["VX"][offset:] - (data_dict[key]["VY"][:len(gt_data["ID"])-offset]/fy_dt)
+        ax3.plot(gt_data["ID"][:len(gt_data["ID"])-offset], abs(error_dict[key]["error_vx"]), label="error_{}_vx".format(key))
+        ax4.plot(gt_data["ID"][:len(gt_data["ID"])-offset], abs(error_dict[key]["error_vy"]), label="error_{}_vy".format(key))
+    ax1.plot(gt_data["ID"], gt_data["HG"], label="gt_h") # -gt_y = fft_x
+    ax2.plot(gt_data["ID"], gt_data["HG"], label="gt_h") # -gt_y = fft_x
     ax3.legend()
     ax4.legend()
     ax3.grid(True)
@@ -136,4 +153,27 @@ ax2.grid(True)
 plt.xlabel("TimeStamps(ms)")
 ax1.set_ylabel("v_x(rad/s)")
 ax2.set_ylabel("v_y(rad/s)")
+
+print("\n")
+if gt_num > 0:
+    pixel_threshold = 1.0
+    error_max = 0
+    with open(args.eval, 'w') as file:
+        file.write('start count:{}\n'.format(args.start))
+        for key in data_dict:
+            title = "Eval {} flow:\n".format(key)
+            file.write(title)
+            print(title)
+            vx_rmse = calculate_rmse_errors(error_dict[key]["error_vx"])
+            vy_rmse = calculate_rmse_errors(error_dict[key]["error_vy"])
+            error_max = max(error_max,vx_rmse)
+            error_max = max(error_max,vy_rmse)
+            pixel_error = calculate_pixel_errors(error_dict[key]["error_vx"] * fx_dt, error_dict[key]["error_vy"] * fy_dt, pixel_threshold)
+            result = "  vx_rmse:{:.3f}, vy_rmse:{:.3f}, {:.1f} pixel_error:{:.3f}%\n".format(vx_rmse, vy_rmse, pixel_threshold, pixel_error)
+            file.write(result)
+            print(result)
+    ax3.set_ylim(-0.1, 2*error_max)
+    ax4.set_ylim(-0.1, 2*error_max)
+    plt.savefig(args.eval.replace('.txt', '.png'))
 plt.show()
+
