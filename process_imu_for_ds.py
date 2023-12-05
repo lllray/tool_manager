@@ -10,12 +10,13 @@ with open(input_file, 'r') as f:
 
 lines = data.strip().split('\n')
 
+offset = 2
 # 过滤ID从1开始到再次为0结束的数据
 filtered_data = []
 start_time = None
 for line in lines:
     parts = line.split()
-    if int(float(parts[0])) <= 0:
+    if int(float(parts[0])) < 1 + offset:
         continue
     if start_time is None:
         start_time = float(parts[-1])

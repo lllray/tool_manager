@@ -71,7 +71,7 @@ parser = argparse.ArgumentParser(description='命令行参数解析')
 # 添加命令行参数
 parser.add_argument('-f', '--fft', type=str, help='fft flow result path')
 parser.add_argument('-k', '--klt', type=str, help='klt flow result path')
-parser.add_argument('-d', '--deep_sea', type=str, help='deep_sea flow result path')
+parser.add_argument('-d', '--ds_klt', type=str, help='ds_klt flow result path')
 parser.add_argument('-g', '--gt', type=str, help='gt flow result path')
 parser.add_argument('-e', '--eval', type=str, help='eval result path')
 parser.add_argument('-s', '--start', type=int, help='start count')
@@ -94,10 +94,10 @@ if args.klt:
     data_dict['klt'] = {}
     parse_result_data(args.klt, data_dict['klt'])
     data_num += 1
-if args.deep_sea:
-    print('deep_sea flow result path:', args.deep_sea)
-    data_dict['deep_sea'] = {}
-    parse_result_data(args.deep_sea, data_dict['deep_sea'])
+if args.ds_klt:
+    print('ds_klt flow result path:', args.ds_klt)
+    data_dict['ds_klt'] = {}
+    parse_result_data(args.ds_klt, data_dict['ds_klt'])
     data_num += 1
 if args.gt:
     print('gt flow result path:', args.gt)
@@ -155,7 +155,7 @@ ax1.set_ylabel("v_x(rad/s)")
 ax2.set_ylabel("v_y(rad/s)")
 
 print("\n")
-if gt_num > 0:
+if gt_num > 0 and args.eval:
     pixel_threshold = 1.0
     error_max = 0
     with open(args.eval, 'w') as file:
@@ -172,8 +172,8 @@ if gt_num > 0:
             result = "  vx_rmse:{:.3f}, vy_rmse:{:.3f}, {:.1f} pixel_error:{:.3f}%\n".format(vx_rmse, vy_rmse, pixel_threshold, pixel_error)
             file.write(result)
             print(result)
-    ax3.set_ylim(-0.1, 2*error_max)
-    ax4.set_ylim(-0.1, 2*error_max)
+    ax3.set_ylim(-0.01, 3*error_max)
+    ax4.set_ylim(-0.01, 3*error_max)
     plt.savefig(args.eval.replace('.txt', '.png'))
 plt.show()
 
