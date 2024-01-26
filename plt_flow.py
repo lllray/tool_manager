@@ -23,8 +23,6 @@ def calculate_pixel_errors(error_x, error_y, threshold):
     pixel_error_percentage = (pixel_error_count / total_pixels) * 100
     return pixel_error_percentage
 
-
-
 def parse_gt_data(gt_file_path, data_gt):
     data_gt["ID"] = []
     data_gt["VX"] = []
@@ -59,7 +57,7 @@ def parse_result_data(log_file_path, data):
             if numbers:
                 # Store the extracted values in the dictionary
                 data["ID"].append(int(numbers[0]))
-                data["TIME"].append(int(numbers[1]))
+                data["TIME"].append(float(numbers[1]))
                 data["FPS"].append(float(numbers[2]))
                 data["VX"].append(float(numbers[3]))
                 data["VY"].append(float(numbers[4]))
@@ -70,8 +68,10 @@ parser = argparse.ArgumentParser(description='命令行参数解析')
 
 # 添加命令行参数
 parser.add_argument('-f', '--fft', type=str, help='fft flow result path')
-parser.add_argument('-k', '--klt', type=str, help='klt flow result path')
+parser.add_argument('-cv', '--opencv', type=str, help='opencv flow result path')
 parser.add_argument('-d', '--ds_klt', type=str, help='ds_klt flow result path')
+parser.add_argument('-m', '--mcu_klt', type=str, help='mcu_klt flow result path')
+parser.add_argument('-ol', '--online', type=str, help='online flow result path')
 parser.add_argument('-g', '--gt', type=str, help='gt flow result path')
 parser.add_argument('-e', '--eval', type=str, help='eval result path')
 parser.add_argument('-s', '--start', type=int, help='start count')
@@ -89,15 +89,25 @@ if args.fft:
     data_dict['fft'] = {}
     parse_result_data(args.fft, data_dict['fft'])
     data_num += 1
-if args.klt:
-    print('klt flow result path:', args.klt)
-    data_dict['klt'] = {}
-    parse_result_data(args.klt, data_dict['klt'])
+if args.opencv:
+    print('opencv_klt flow result path:', args.opencv)
+    data_dict['opencv_klt'] = {}
+    parse_result_data(args.opencv, data_dict['opencv_klt'])
     data_num += 1
 if args.ds_klt:
     print('ds_klt flow result path:', args.ds_klt)
     data_dict['ds_klt'] = {}
     parse_result_data(args.ds_klt, data_dict['ds_klt'])
+    data_num += 1
+if args.mcu_klt:
+    print('mcu_klt flow result path:', args.mcu_klt)
+    data_dict['mcu_klt'] = {}
+    parse_result_data(args.mcu_klt, data_dict['mcu_klt'])
+    data_num += 1
+if args.online:
+    print('online flow result path:', args.online)
+    data_dict['mcu_klt_opt'] = {}
+    parse_result_data(args.online, data_dict['mcu_klt_opt'])
     data_num += 1
 if args.gt:
     print('gt flow result path:', args.gt)
@@ -111,9 +121,14 @@ if args.start:
 
 #数据格式转换
 for data_key in data_dict:
-    data_dict[data_key] = {key: np.array(value[start_count:]) for key, value in data_dict[data_key].items()}
-gt_data = {key: np.array(value[start_count:]) for key, value in gt_data.items()}
-
+    data_dict[data_key] = {key: np.array(value) for key, value in data_dict[data_key].items()}
+    filtered_indexes = np.where(data_dict[data_key]['ID'] > start_count)
+    data_dict[data_key] = {key: value[filtered_indexes] for key, value in data_dict[data_key].items()}
+    print(data_dict[data_key])
+gt_data = {key: np.array(value) for key, value in gt_data.items()}
+filtered_indexes = np.where(gt_data['ID'] > start_count)
+gt_data = {key: value[filtered_indexes] for key, value in gt_data.items()}
+print(gt_data)
 fx_dt = 138.323/30
 fy_dt = 184.426/30
 offset = 2
@@ -130,12 +145,12 @@ for key in data_dict:
 
 error_dict = {}
 if gt_num > 0:
-    ax1.plot(gt_data["ID"]-offset, -gt_data["VY"], label="gt_vx") # -gt_y = fft_x
-    ax2.plot(gt_data["ID"]-offset, -gt_data["VX"], label="gt_vy") # -gt_x = fft_y
+    ax1.plot(gt_data["ID"]-offset, gt_data["VY"], label="gt_vx") # -gt_y = fft_x
+    ax2.plot(gt_data["ID"]-offset, gt_data["VX"], label="gt_vy") # -gt_x = fft_y
     for key in data_dict:
         error_dict[key] = {}
-        error_dict[key]["error_vx"] = -gt_data["VY"][offset:] - (data_dict[key]["VX"][:len(gt_data["ID"])-offset]/fx_dt)
-        error_dict[key]["error_vy"] = -gt_data["VX"][offset:] - (data_dict[key]["VY"][:len(gt_data["ID"])-offset]/fy_dt)
+        error_dict[key]["error_vx"] = gt_data["VY"][offset:] - (data_dict[key]["VX"][:len(gt_data["ID"])-offset]/fx_dt)
+        error_dict[key]["error_vy"] = gt_data["VX"][offset:] - (data_dict[key]["VY"][:len(gt_data["ID"])-offset]/fy_dt)
         ax3.plot(gt_data["ID"][:len(gt_data["ID"])-offset], abs(error_dict[key]["error_vx"]), label="error_{}_vx".format(key))
         ax4.plot(gt_data["ID"][:len(gt_data["ID"])-offset], abs(error_dict[key]["error_vy"]), label="error_{}_vy".format(key))
     ax1.plot(gt_data["ID"], gt_data["HG"], label="gt_h") # -gt_y = fft_x
