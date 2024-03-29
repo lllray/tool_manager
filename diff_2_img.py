@@ -14,7 +14,7 @@ def compare_images(image1, image2):
         return
 
     # 比较两个图像并作差
-    diff = cv2.absdiff(img1, img2) * 100
+    diff = cv2.absdiff(img1, img2) * 200
 
     height, width = img1.shape[:2]
 

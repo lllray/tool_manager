@@ -35,7 +35,7 @@ with open(log_file_path1, "r") as file:
         if numbers:
             # Store the extracted values in the dictionary
             data["ID"].append(int(numbers[0]))
-            data["TIME"].append(int(numbers[1]))
+            data["TIME"].append(float(numbers[1]))
             data["FPS"].append(float(numbers[2]))
             data["VX"].append(float(numbers[3]))
             data["VY"].append(float(numbers[4]))
@@ -47,9 +47,9 @@ data = {key: np.array(value) for key, value in data.items()}
 # Plot the curves
 fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(10, 6),sharex=True)
 #plt.plot(data["Type"], label="Type")
-ax1.plot(data["TIME"], -data["VX"], label="vx")
-ax2.plot(data["TIME"], -data["VY"], label="vy")
-ax3.plot(data["TIME"], data["QUAL"], label="qual")
+ax1.plot(-data["VX"], label="vx")
+ax2.plot(-data["VY"], label="vy")
+ax3.plot(data["QUAL"], label="qual")
 
 plt.xlabel("TimeStamps(ms)")
 plt.ylabel("Velocities(m/s)")

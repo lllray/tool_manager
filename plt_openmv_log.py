@@ -30,21 +30,21 @@ with open(log_file_path, "r") as file:
     for line in file:
     	if "MarkerInfo" in line:
 		# Extract numbers, Type, and ID from the current line using regular expressions
-		numbers = re.findall(number_pattern, line)
+            numbers = re.findall(number_pattern, line)
 
 		# Remove the plus/minus signs from the numbers
-		numbers = [num.replace("+", "") for num in numbers]
+		# numbers = [num.replace("+", "") for num in numbers]
 
-		if numbers:
+            if numbers:
 		    # Store the extracted values in the dictionary
-		    data["Type"].append(int(numbers[0]))
-		    data["ID"].append(int(numbers[1]))
-		    data["Tx"].append(float(numbers[2])/100)
-		    data["Ty"].append(float(numbers[3])/100)
-		    data["Tz"].append(-float(numbers[4])/100)
-		    data["Rx"].append(float(numbers[5]))
-		    data["Ry"].append(float(numbers[6]))
-		    data["Rz"].append(float(numbers[7]))
+                data["Type"].append(int(numbers[0]))
+                data["ID"].append(int(numbers[1]))
+                data["Tx"].append(float(numbers[2])/100)
+                data["Ty"].append(float(numbers[3])/100)
+                data["Tz"].append(-float(numbers[4])/100)
+                data["Rx"].append(float(numbers[5]))
+                data["Ry"].append(float(numbers[6]))
+                data["Rz"].append(float(numbers[7]))
 
 # Convert the data to NumPy arrays
 data = {key: np.array(value) for key, value in data.items()}

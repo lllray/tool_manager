@@ -131,7 +131,7 @@ gt_data = {key: value[filtered_indexes] for key, value in gt_data.items()}
 print(gt_data)
 fx_dt = 138.323/30
 fy_dt = 184.426/30
-offset = 2
+offset = 6
 
 # Plot the curves
 if gt_num > 0:
