@@ -25,104 +25,6 @@ def yaw_correction(yaw):
         yaw += 180
     return yaw
 
-def detect_and_draw_corners(image, pattern_size, hground, real_dist):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # 检测棋盘格角点
-    ret, corners = cv2.findChessboardCorners(gray, pattern_size, cv2.CALIB_CB_ADAPTIVE_THRESH+cv2.CALIB_CB_NORMALIZE_IMAGE)
-
-    if ret:
-        # 绘制角点
-        cv2.drawChessboardCorners(image, pattern_size, corners, ret)
-
-        # 显示带有角点的图像
-        cv2.imshow("Chessboard Corners", image)
-
-        # 存储角点坐标和行列号
-        corner_coords = np.zeros((pattern_size[0], pattern_size[1],2))
-        diff1 = np.zeros((pattern_size[0]-1, pattern_size[1],3))
-        diff2 = np.zeros((pattern_size[0], pattern_size[1]-1,3))
-
-        for i, corner in enumerate(corners):
-            x, y = corner[0]
-            row = i // pattern_size[0]
-            col = i % pattern_size[0]
-            corner_coords[pattern_size[0] - col - 1, pattern_size[1] - row - 1] = [x, y]
-        for x in range(pattern_size[0]):
-            for y in range(pattern_size[1]):
-                cur_corner = corner_coords[x, y]
-                if debug:
-                    print("({},{})：({:.2f}, {:.2f})".format(x, y, cur_corner[0], cur_corner[1]))
-                if x is not 0:
-                    prev_corner = corner_coords[x-1,y,]
-                    distance = np.linalg.norm(cur_corner - prev_corner)
-                    center = (cur_corner + prev_corner) / 2
-                    diff1[x-1,y] = [distance, center[0], center[1]]
-                    if debug:
-                        print("({:d},{:d}) ({:d},{:d}) distance：{:.2f}，center：({:.2f}, {:.2f})".format(x-1,y,x,y,distance, center[0], center[1]))
-                if y is not 0:
-                    prev_corner = corner_coords[x,y-1]
-                    distance = np.linalg.norm(cur_corner - prev_corner)
-                    center = (cur_corner + prev_corner) / 2
-                    diff2[x,y-1] = [distance, center[0], center[1]]
-                    if debug:
-                        print("({:d},{:d}) ({:d},{:d}) distance：{:.2f}，center：({:.2f}, {:.2f})".format(x,y-1,x,y,distance, center[0], center[1]))
-
-        #计算焦距
-        distance_temp = 0
-        distance_count = 0
-        for x in range(3,5):
-            for y in range(2,4):
-                distance_temp = distance_temp + diff1[x,y][0]
-                distance_count = distance_count + 1
-        for x in range(3,6):
-            distance_temp = distance_temp + diff2[x,2][0]
-            distance_count = distance_count + 1
-        focus = (distance_temp/distance_count) * hground / real_dist
-
-        offset_max = 1
-        # 计算 roll
-        left_distance_temp = 0
-        left_center = 0
-        right_distance_temp = 0
-        right_center = 0
-        count = 0
-        for y in range(pattern_size[1]-1):
-            for offset in range(offset_max):
-                left_distance_temp = left_distance_temp + diff2[0 + offset,y][0]
-                left_center = left_center + diff2[0 + offset,y][1]
-                right_distance_temp = right_distance_temp + diff2[pattern_size[0]-1 - offset,y][0]
-                right_center = right_center + diff2[pattern_size[0]-1 - offset,y][1]
-                count = count + 1
-                #print(diff1[x,0][0], diff2[pattern_size[0]-1,y][0])
-                #print(diff2[0,y][1], diff2[pattern_size[0]-1,y][1])
-        diff_l_r_distance = (right_distance_temp - left_distance_temp)/count
-        diff_l_r_center = (right_center - left_center)/count
-        print(diff_l_r_distance, diff_l_r_center)
-        roll = degrees(math.atan(abs(diff_l_r_center)/diff_l_r_distance * hground / real_dist))
-        # 计算pitch
-        up_distance_temp = 0
-        up_center = 0
-        down_distance_temp = 0
-        down_center = 0
-        count = 0
-        for x in range(pattern_size[0]-1):
-            for offset in range(offset_max):
-                up_distance_temp = up_distance_temp + diff1[x,0 + offset][0]
-                up_center = up_center + diff1[x,0 + offset][2]
-                down_distance_temp = down_distance_temp + diff1[x, pattern_size[1]-1 - offset][0]
-                down_center = down_center + diff1[x, pattern_size[1]-1 - offset][2]
-                count = count + 1
-                #print(diff1[x,0][0], diff1[x, pattern_size[1]-1][0])
-                #print(diff1[x,0][2], diff1[x, pattern_size[1]-1][2])
-        diff_u_d_distance = (down_distance_temp - up_distance_temp)/count
-        diff_u_d_center = (down_center -up_center)/count
-        print(diff_u_d_distance, diff_u_d_center)
-        pitch = degrees(math.atan(abs(diff_u_d_distance)/diff_u_d_center * hground / real_dist))
-        print("focus:{} roll:{} pitch:{}".format(focus,roll,pitch))
-    else:
-        print("Chessboard corners not found.")
-
 def detect_and_draw_circle_corners(image, pattern_size, hground, real_dist):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -237,9 +139,11 @@ def detect_and_draw_circle_corners(image, pattern_size, hground, real_dist):
 
         roll_real = roll * math.cos(yaw*math.pi/180) + pitch * math.sin(yaw*math.pi/180)
         pitch_real = -roll * math.sin(yaw*math.pi/180) + pitch * math.cos(yaw*math.pi/180)
-        print("focus:{} yaw:{} roll:{} pitch:{} roll_real:{} pitch_real:{}".format(focus,yaw,roll,pitch,roll_real,pitch_real))
+        print("focus:{} yaw:{} roll:{} pitch:{} roll_real:{} pitch_real:{}".format(focus,roll,pitch,roll_real,pitch_real))
+        return focus,roll_real,pitch_real
     else:
         print("Circleboard corners not found.")
+        return 0,0,0
 
 
 
@@ -258,12 +162,10 @@ def calib_single_image(image_path):
     undistorted_image = undistort_image(image, camera_matrix, distortion_coeffs)
 
     # 设置棋盘格的大小
-    pattern_size = (9, 6)  # 9行6列的棋盘格
     circle_pattern_size = (7, 5)  # 9行6列的棋盘格
     # 检测并绘制角点
-    #detect_and_draw_corners(image, pattern_size, 250 ,24)
-    detect_and_draw_circle_corners(undistorted_image, circle_pattern_size, 250, 30)
     cv2.waitKey(10)
+    return detect_and_draw_circle_corners(undistorted_image, circle_pattern_size, 250, 30)
 
 image_extensions = ['.jpg', '.jpeg', '.png']  # 可以根据需要添加其他图像文件扩展名
 def is_image_file(file_path):
@@ -283,11 +185,25 @@ def traverse_images(folder_path):
 
     sorted_image_files = sorted(image_files)  # 按照文件名进行排序
 
+    focus_sum = 0.0
+    roll_real_sum = 0.0
+    pitch_real_sum = 0.0
+    count = 0
+    
     for image_file in sorted_image_files:
         print("Image file:", image_file)
         # 在这里可以执行你想要的操作，比如读取图像、处理图像等
-        calib_single_image(image_file)
-
+        focus, roll_real, pitch_real = calib_single_image(image_file)
+        if focus > 0:
+            focus_sum += focus
+            roll_real_sum += roll_real
+            pitch_real_sum += pitch_real
+            count += 1
+    if count > 0:
+        focus_avg = focus_sum / count
+        roll_real_avg = roll_real_sum / count
+        pitch_real_avg = pitch_real_sum / count
+        print("Average focus: {}, roll_real: {}, pitch_real: {}".format(focus_avg, roll_real_avg, pitch_real_avg))
 input_path = sys.argv[1]
 if len(sys.argv) > 2:
     output_path = sys.argv[2]
