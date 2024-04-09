@@ -1,6 +1,8 @@
 import rospy
 from rospy import Time
 from sensor_msgs.msg import Range
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Quaternion, Point
 import rosbag
 import sys
 
@@ -20,6 +22,26 @@ def generate_rosbag(txt_file, rosbag_file):
             range_data.min_range = 0.0  # 设置最小测量距离
             range_data.max_range = 10.0  # 设置最大测量距离
             range_data.range = float(data[3])  # 第4列为对地面高度
+
+            position_data = Point()
+            position_data.x = float(data[1])
+            position_data.y = float(data[2])
+            position_data.z = float(data[3])
+
+            orientation_data = Quaternion()
+            orientation_data.x = float(data[4])
+            orientation_data.y = float(data[5])
+            orientation_data.z = float(data[6])
+            orientation_data.w = float(data[7])
+
+            odometry_data = Odometry()
+            odometry_data.header.stamp = timestamp
+            odometry_data.header.frame_id = 'odom_frame'
+            odometry_data.child_frame_id = 'sensor_frame'
+            odometry_data.pose.pose.position = position_data
+            odometry_data.pose.pose.orientation = orientation_data
+
+            bag.write('/local_pose', odometry_data, timestamp)
             bag.write('/distance', range_data, timestamp)
 
         bag.close()
