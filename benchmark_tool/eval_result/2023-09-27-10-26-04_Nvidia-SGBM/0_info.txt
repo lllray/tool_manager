@@ -1,0 +1,14 @@
+method:Nvidia-SGBM
+timestamp:2023-09-27-10-26-04
+gt_path:/mnt/2t_1/data/mt_stereo/stereo_disp
+ :Max Disparities:128
+ :Min Disparities:0
+ :Window Size:5
+ :P1:26
+ :P2:108
+ :P2 Alpha:0
+ :Uniqueness Ratio:90
+ :Num Passes:3
+ :Quality:6
+ :Need Diagonal:1
+ :Use Confidence:none

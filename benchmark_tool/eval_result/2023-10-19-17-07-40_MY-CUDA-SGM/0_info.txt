@@ -1,0 +1,12 @@
+method:MY-CUDA-SGM
+timestamp:2023-10-19-17-07-40
+gt_path:/mnt/2t_1/data/mt_stereo/stereo_disp
+ :min_disp:0
+ :disp_size:128
+ :P1:20
+ :P1_ALPHA:8
+ :P2:215
+ :uniqueness:80
+ :num_paths:1
+ :LR_max_diff:1
+ :use_gray_distance:0

@@ -1,0 +1,12 @@
+method:OpenCV-BM
+timestamp:2023-09-27-10-33-45
+gt_path:/mnt/2t_1/data/mt_stereo/stereo_disp
+ :Num Disparities:128
+ :Block Size:9
+ :TextureThreshold:10
+ :Uniqueness Ratio:15
+ :SpeckleWindowSize:100
+ :SpeckleRange:32
+ :Disp12MaxDiff:1
+ :PreFilterCap:31
+ :PreFilterSize:9

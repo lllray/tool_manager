@@ -1,0 +1,13 @@
+method:OpenCV-SGBM
+timestamp:2023-09-26-20-33-01
+gt_path:/mnt/2t_1/data/mt_stereo/stereo_disp
+ :Num Disparities:128
+ :Block Size:3
+ :Mode:MODE_HH4
+ :P1:276
+ :P2:1992
+ :Uniqueness Ratio:10
+ :SpeckleWindowSize:100
+ :SpeckleRange:3
+ :Disp12MaxDiff:1
+ :PreFilterCap:63

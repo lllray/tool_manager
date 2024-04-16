@@ -41,7 +41,7 @@ def generate_rosbag(txt_file, rosbag_file):
             odometry_data.pose.pose.position = position_data
             odometry_data.pose.pose.orientation = orientation_data
 
-            bag.write('/local_pose', odometry_data, timestamp)
+            #bag.write('/local_pose', odometry_data, timestamp)
             bag.write('/distance', range_data, timestamp)
 
         bag.close()

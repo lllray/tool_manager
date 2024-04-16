@@ -1,0 +1,3 @@
+mean_disp_error3(%): 1.208
+mean_disp_error5(%): 0.829
+mean_disp_density(%): 22.472

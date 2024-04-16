@@ -1,0 +1,45 @@
+
+        <html>
+        <head>
+            <style>
+                h1 {
+                    text-align: center;
+                }
+                table {
+                    table-layout: auto;
+                }
+                th, td {
+                    text-align: left;
+                    padding: 8px;
+                }
+                th {
+                    font-weight: bold;
+                    /*background-color: #D0D0D0; /* 横坐标表头的背景颜色 */
+                    /*max-width: 1000;*/
+                }
+                tr:nth-child(even) {
+                    background-color: #f2f2f2;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>双目匹配BenchMark</h1>
+            <table>
+<tr><th>method</th><th>timestamp</th><th>mean_error3(%)</th><th>mean_error5(%)</th><th>mean_density(%)</th><th>link
+</th></tr>
+<tr><th>OpenCV-SGBM</th><td>2023-09-26-20-33-01</td><td>0.506</td><td>0.377</td><td>89.381</td><td><a href="2023-09-26-20-33-01_OpenCV-SGBM/result.html
+">2023-09-26-20-33-01_OpenCV-SGBM/result.html
+</a></td></tr>
+<tr><th>MY-CUDA-SGM</th><td>2023-10-19-17-07-40</td><td>0.538</td><td>0.353</td><td>86.827</td><td><a href="2023-10-19-17-07-40_MY-CUDA-SGM/result.html
+">2023-10-19-17-07-40_MY-CUDA-SGM/result.html
+</a></td></tr>
+<tr><th>Nvidia-SGBM</th><td>2023-09-27-10-26-04</td><td>0.631</td><td>0.502</td><td>88.372</td><td><a href="2023-09-27-10-26-04_Nvidia-SGBM/result.html
+">2023-09-27-10-26-04_Nvidia-SGBM/result.html
+</a></td></tr>
+<tr><th>OpenCV-BM</th><td>2023-09-27-10-33-45</td><td>1.208</td><td>0.829</td><td>22.472</td><td><a href="2023-09-27-10-33-45_OpenCV-BM/result.html
+">2023-09-27-10-33-45_OpenCV-BM/result.html
+</a></td></tr>
+</table>
+        </body>
+        </html>
+        
