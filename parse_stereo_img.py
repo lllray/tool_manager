@@ -3,6 +3,8 @@ import sys
 import cv2
 import rosbag
 from cv_bridge import CvBridge
+from sensor_msgs.msg import CompressedImage
+import numpy as np
 
 def extract_images_from_bag(bag_path, interval, left_topic, right_topic):
     # 创建保存图像的文件夹
@@ -33,10 +35,18 @@ def extract_images_from_bag(bag_path, interval, left_topic, right_topic):
         if topic == left_topic:
             count += 1
             left_timestamp = msg.header.stamp
-            left_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            if 'format' in dir(msg):
+                np_arr = np.fromstring(msg.data, np.uint8)
+                left_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            else:
+                left_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         elif topic == right_topic:
             right_timestamp = msg.header.stamp
-            right_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            if 'format' in dir(msg):
+                np_arr = np.fromstring(msg.data, np.uint8)
+                right_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+            else:
+                right_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
         print(left_timestamp, right_timestamp)
         # 检查左右图像时间戳是否一致且图像不为空

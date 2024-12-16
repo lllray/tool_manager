@@ -131,7 +131,7 @@ gt_data = {key: value[filtered_indexes] for key, value in gt_data.items()}
 print(gt_data)
 fx_dt = 138.323/30
 fy_dt = 184.426/30
-offset = 6
+offset = 2
 
 # Plot the curves
 if gt_num > 0:
@@ -145,12 +145,12 @@ for key in data_dict:
 
 error_dict = {}
 if gt_num > 0:
-    ax1.plot(gt_data["ID"]-offset, gt_data["VY"], label="gt_vx") # -gt_y = fft_x
-    ax2.plot(gt_data["ID"]-offset, gt_data["VX"], label="gt_vy") # -gt_x = fft_y
+    ax1.plot(gt_data["ID"]-offset, -gt_data["VY"], label="gt_vx") # -gt_y = fft_x
+    ax2.plot(gt_data["ID"]-offset, -gt_data["VX"], label="gt_vy") # -gt_x = fft_y
     for key in data_dict:
         error_dict[key] = {}
-        error_dict[key]["error_vx"] = gt_data["VY"][offset:] - (data_dict[key]["VX"][:len(gt_data["ID"])-offset]/fx_dt)
-        error_dict[key]["error_vy"] = gt_data["VX"][offset:] - (data_dict[key]["VY"][:len(gt_data["ID"])-offset]/fy_dt)
+        error_dict[key]["error_vx"] = -gt_data["VY"][offset:] - (data_dict[key]["VX"][:len(gt_data["ID"])-offset]/fx_dt)
+        error_dict[key]["error_vy"] = -gt_data["VX"][offset:] - (data_dict[key]["VY"][:len(gt_data["ID"])-offset]/fy_dt)
         ax3.plot(gt_data["ID"][:len(gt_data["ID"])-offset], abs(error_dict[key]["error_vx"]), label="error_{}_vx".format(key))
         ax4.plot(gt_data["ID"][:len(gt_data["ID"])-offset], abs(error_dict[key]["error_vy"]), label="error_{}_vy".format(key))
     ax1.plot(gt_data["ID"], gt_data["HG"], label="gt_h") # -gt_y = fft_x
