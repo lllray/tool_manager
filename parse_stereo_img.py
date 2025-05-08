@@ -35,29 +35,35 @@ def extract_images_from_bag(bag_path, interval, left_topic, right_topic):
         if topic == left_topic:
             count += 1
             left_timestamp = msg.header.stamp
+            #print("left encoding:",msg.encoding)
             if 'format' in dir(msg):
                 np_arr = np.fromstring(msg.data, np.uint8)
                 left_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            else:
+            elif msg.encoding == 'bgr8':
+                #print("left encoding:",msg.encoding)
                 left_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         elif topic == right_topic:
             right_timestamp = msg.header.stamp
+            #print("right encoding:",msg.encoding)
             if 'format' in dir(msg):
                 np_arr = np.fromstring(msg.data, np.uint8)
                 right_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            else:
+            elif msg.encoding == 'bgr8':
+                #print("right encoding:",msg.encoding)
                 right_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
 
         print(left_timestamp, right_timestamp)
         # 检查左右图像时间戳是否一致且图像不为空
         if left_timestamp is not None and right_timestamp is not None and left_timestamp == right_timestamp and left_image is not None and right_image is not None:
-            if count % interval == 0:
+            if count % interval == 0 and int(left_timestamp.secs) != 0:
                 # 保存左图像
                 left_img_path = os.path.join(left_folder, f"{left_timestamp}.png")
+                print("left image path:",left_img_path)
                 cv2.imwrite(left_img_path, left_image)
 
                 # 保存右图像
                 right_img_path = os.path.join(right_folder, f"{right_timestamp}.png")
+                print("right image path:",right_img_path)
                 cv2.imwrite(right_img_path, right_image)
                 # 重置时间戳和图像变量
                 left_timestamp = None

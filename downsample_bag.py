@@ -25,7 +25,7 @@ def downsample_bag_topics(input_bag, output_bag, left_topic, right_topic, factor
                 continue
             #print(left_timestamp, right_timestamp)
             if left_timestamp is not None and right_timestamp is not None and left_timestamp == right_timestamp and left_msg is not None and right_msg is not None:
-                if count % factor == 0:
+                if count % factor == 0 and int(msg.header.stamp.secs) != 0:
                     outbag.write(left_topic, left_msg, msg.header.stamp)
                     outbag.write(right_topic, right_msg, msg.header.stamp)
                     left_timestamp = None

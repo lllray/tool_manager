@@ -3,7 +3,8 @@ import sys
 import cv2
 import rosbag
 from cv_bridge import CvBridge
-
+from sensor_msgs.msg import CompressedImage
+import numpy as np
 def extract_images_from_bag(bag_path, interval, left_topic, imu_topic):
     # 创建保存图像的文件夹
     base_folder = os.path.splitext(os.path.basename(bag_path))[0]
@@ -50,7 +51,12 @@ def extract_images_from_bag(bag_path, interval, left_topic, imu_topic):
             if count % interval == 0 and count >= start_count:
                 left_timestamp = msg.header.stamp.to_nsec()
                 print(left_timestamp)
-                left_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+                if 'format' in dir(msg):
+                    np_arr = np.fromstring(msg.data, np.uint8)
+                    left_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+                elif msg.encoding == 'bgr8':
+                    #print("left encoding:",msg.encoding)
+                    left_image = bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
                 if video is None:
                     height, width, _ = left_image.shape
                     video = cv2.VideoWriter(output_video, fourcc, 30, (width, height))
